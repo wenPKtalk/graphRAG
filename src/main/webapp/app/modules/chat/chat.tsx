@@ -53,7 +53,10 @@ export const Chat = () => {
   const [error, setError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const setInputRef = useCallback((node: HTMLInputElement | null) => {
+    inputRef.current = node;
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -276,8 +279,8 @@ export const Chat = () => {
                                         文档: {chunk.documentTitle} | 片段 {chunk.chunkIndex + 1}
                                       </small>
                                       <div className="small mt-1">
-                                        {chunk.content.length > 200 
-                                          ? chunk.content.substring(0, 200) + '...' 
+                                        {chunk.content.length > 200
+                                          ? chunk.content.substring(0, 200) + '...'
                                           : chunk.content}
                                       </div>
                                     </div>
@@ -326,7 +329,7 @@ export const Chat = () => {
                 <FormGroup className="mb-0">
                   <div className="d-flex">
                     <Input
-                      ref={inputRef}
+                      innerRef={setInputRef}
                       type="text"
                       placeholder="请输入您的问题..."
                       value={currentQuestion}

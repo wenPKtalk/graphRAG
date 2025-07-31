@@ -173,10 +173,10 @@ dependencies {
     testImplementation "org.testcontainers:neo4j"
     testImplementation "org.testcontainers:testcontainers"
     developmentOnly "org.springframework.boot:spring-boot-docker-compose"
-    
+
     // RAG specific dependencies
     implementation "com.theokanning.openai-gpt3-java:service:0.18.2"
-    implementation "org.apache.pdfbox:pdfbox:3.0.1"
+    implementation "org.apache.pdfbox:pdfbox:3.0.3"
     implementation "org.apache.poi:poi:5.2.4"
     implementation "org.apache.poi:poi-ooxml:5.2.4"
     implementation "org.apache.poi:poi-scratchpad:5.2.4"
@@ -184,7 +184,7 @@ dependencies {
     implementation "org.jsoup:jsoup:1.17.2"
     implementation "org.apache.tika:tika-core:2.9.1"
     implementation "org.apache.tika:tika-parsers-standard-package:2.9.1"
-    
+
     // jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
     OperatingSystem os = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem();
     Architecture arch = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentArchitecture();

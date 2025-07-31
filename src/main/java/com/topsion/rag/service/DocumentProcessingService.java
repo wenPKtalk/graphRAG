@@ -1,35 +1,38 @@
 package com.topsion.rag.service;
 
-import com.topsion.rag.domain.Document;
-import com.topsion.rag.domain.DocumentChunk;
-import com.topsion.rag.domain.Entity;
-import com.topsion.rag.repository.DocumentRepository;
-import com.topsion.rag.repository.DocumentChunkRepository;
-import com.topsion.rag.repository.EntityRepository;
-import com.topsion.rag.config.ApplicationProperties;
 import com.theokanning.openai.embedding.EmbeddingRequest;
 import com.theokanning.openai.service.OpenAiService;
+import com.topsion.rag.config.ApplicationProperties;
+import com.topsion.rag.domain.Document;
+import com.topsion.rag.domain.DocumentChunk;
+import com.topsion.rag.repository.DocumentChunkRepository;
+import com.topsion.rag.repository.DocumentRepository;
+import com.topsion.rag.repository.EntityRepository;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -74,13 +77,13 @@ public class DocumentProcessingService {
         return Mono.fromCallable(() -> {
             String uploadDir = "uploads/documents/";
             Files.createDirectories(Paths.get(uploadDir));
-            
+
             String fileName = System.currentTimeMillis() + "_" + filePart.filename();
             Path filePath = Paths.get(uploadDir, fileName);
-            
+
             return filePath;
         })
-        .flatMap(filePath -> 
+        .flatMap(filePath ->
             filePart.transferTo(filePath.toFile())
                 .then(Mono.just(filePath))
         );
@@ -91,7 +94,7 @@ public class DocumentProcessingService {
             try {
                 File file = filePath.toFile();
                 String contentType = tika.detect(file);
-                
+
                 Document document = new Document();
                 document.setTitle(extractTitleFromFilename(file.getName()));
                 document.setFilename(file.getName());
@@ -100,7 +103,7 @@ public class DocumentProcessingService {
                 document.setFilePath(filePath.toString());
                 document.setStatus("UPLOADED");
                 document.setCreatedDate(Instant.now());
-                
+
                 return document;
             } catch (Exception e) {
                 throw new RuntimeException("Failed to create document entity", e);
@@ -134,12 +137,12 @@ public class DocumentProcessingService {
         return Mono.fromCallable(() -> {
             try {
                 String content = extractTextFromFile(Paths.get(document.getFilePath()));
-                
-                String summary = content.length() > 500 
-                    ? content.substring(0, 500) + "..." 
+
+                String summary = content.length() > 500
+                    ? content.substring(0, 500) + "..."
                     : content;
                 document.setSummary(summary);
-                
+
                 return document;
             } catch (Exception e) {
                 throw new RuntimeException("Failed to extract text content", e);
@@ -150,7 +153,7 @@ public class DocumentProcessingService {
     private String extractTextFromFile(Path filePath) throws IOException, TikaException {
         File file = filePath.toFile();
         String contentType = tika.detect(file);
-        
+
         switch (contentType) {
             case "application/pdf":
                 return extractTextFromPdf(file);
@@ -164,7 +167,7 @@ public class DocumentProcessingService {
     }
 
     private String extractTextFromPdf(File file) throws IOException {
-        try (PDDocument document = PDDocument.load(file)) {
+        try (PDDocument document = Loader.loadPDF(file)) {
             PDFTextStripper stripper = new PDFTextStripper();
             return stripper.getText(document);
         }
@@ -189,10 +192,10 @@ public class DocumentProcessingService {
                     content = document.getSummary();
                 }
             }
-            
+
             List<String> chunks = createTextChunks(content);
             AtomicInteger index = new AtomicInteger(0);
-            
+
             Set<DocumentChunk> documentChunks = chunks.stream()
                 .map(chunkContent -> {
                     DocumentChunk chunk = new DocumentChunk();
@@ -204,7 +207,7 @@ public class DocumentProcessingService {
                     return chunk;
                 })
                 .collect(Collectors.toSet());
-            
+
             document.setChunks(documentChunks);
             return document;
         });
@@ -213,24 +216,24 @@ public class DocumentProcessingService {
     private List<String> createTextChunks(String content) {
         int chunkSize = applicationProperties.getOpenai().getRag().getChunkSize();
         int overlap = applicationProperties.getOpenai().getRag().getChunkOverlap();
-        
+
         List<String> chunks = new ArrayList<>();
         int start = 0;
-        
+
         while (start < content.length()) {
             int end = Math.min(start + chunkSize, content.length());
-            
+
             if (end < content.length()) {
                 int lastSpace = content.lastIndexOf(' ', end);
                 if (lastSpace > start) {
                     end = lastSpace;
                 }
             }
-            
+
             chunks.add(content.substring(start, end).trim());
             start = Math.max(start + chunkSize - overlap, end);
         }
-        
+
         return chunks;
     }
 
@@ -257,13 +260,13 @@ public class DocumentProcessingService {
                     .model(model)
                     .input(List.of(chunk.getContent()))
                     .build();
-                
+
                 var response = openAiService.createEmbeddings(request);
                 if (!response.getData().isEmpty()) {
                     List<Double> embedding = response.getData().get(0).getEmbedding();
                     chunk.setEmbedding(embedding.stream().mapToDouble(Double::doubleValue).toArray());
                 }
-                
+
                 return chunk;
             } catch (Exception e) {
                 log.error("Failed to generate embedding for chunk: {}", e.getMessage(), e);

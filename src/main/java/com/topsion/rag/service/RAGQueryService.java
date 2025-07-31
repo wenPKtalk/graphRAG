@@ -39,17 +39,17 @@ public class RAGQueryService {
 
     private static final String RAG_SYSTEM_PROMPT = """
         你是一个专业的知识问答助手。请基于提供的上下文信息回答用户的问题。
-        
+
         回答要求：
         1. 仅基于提供的上下文信息回答，不要添加上下文中没有的信息
         2. 如果上下文信息不足以回答问题，请明确说明
         3. 回答要准确、简洁、有条理
         4. 可以引用相关的实体和概念
         5. 用中文回答
-        
+
         上下文信息：
         %s
-        
+
         相关实体：
         %s
         """;
@@ -70,7 +70,7 @@ public class RAGQueryService {
 
     public Mono<QueryResult> queryKnowledgeBase(String question, String sessionId) {
         long startTime = System.currentTimeMillis();
-        
+
         return generateQueryEmbedding(question)
             .flatMap(embedding -> retrieveRelevantContext(embedding, question))
             .flatMap(context -> generateAnswer(question, context))
@@ -97,13 +97,13 @@ public class RAGQueryService {
                     .model(model)
                     .input(List.of(query))
                     .build();
-                
+
                 var response = openAiService.createEmbeddings(request);
                 if (!response.getData().isEmpty()) {
                     List<Double> embedding = response.getData().get(0).getEmbedding();
                     return embedding.stream().mapToDouble(Double::doubleValue).toArray();
                 }
-                
+
                 throw new RuntimeException("Failed to generate embedding");
             } catch (Exception e) {
                 throw new RuntimeException("Failed to generate query embedding", e);
@@ -113,7 +113,7 @@ public class RAGQueryService {
 
     private Mono<RetrievedContext> retrieveRelevantContext(double[] queryEmbedding, String question) {
         int maxChunks = applicationProperties.getOpenai().getRag().getMaxContextChunks();
-        
+
         return Mono.zip(
             retrieveSimilarChunks(queryEmbedding, maxChunks),
             retrieveRelevantEntities(queryEmbedding, question, 10)
@@ -144,7 +144,7 @@ public class RAGQueryService {
         .map(tuple -> {
             Set<Entity> combinedEntities = new HashSet<>(tuple.getT1());
             combinedEntities.addAll(tuple.getT2());
-            return new ArrayList<>(combinedEntities);
+            return List.copyOf(combinedEntities);
         })
         .doOnNext(entities -> log.debug("Retrieved {} relevant entities", entities.size()));
     }
@@ -163,9 +163,9 @@ public class RAGQueryService {
             try {
                 String contextText = buildContextText(context.chunks());
                 String entitiesText = buildEntitiesText(context.entities());
-                
+
                 String systemPrompt = String.format(RAG_SYSTEM_PROMPT, contextText, entitiesText);
-                
+
                 ChatCompletionRequest request = ChatCompletionRequest.builder()
                     .model(applicationProperties.getOpenai().getModel().getChat())
                     .messages(List.of(
@@ -178,9 +178,9 @@ public class RAGQueryService {
 
                 var response = openAiService.createChatCompletion(request);
                 String answer = response.getChoices().get(0).getMessage().getContent();
-                
+
                 return new QueryResult(answer, context.chunks(), context.entities());
-                
+
             } catch (Exception e) {
                 log.error("Failed to generate answer: {}", e.getMessage(), e);
                 throw new RuntimeException("Failed to generate answer", e);
@@ -196,14 +196,14 @@ public class RAGQueryService {
 
     private String buildEntitiesText(List<Entity> entities) {
         return entities.stream()
-            .map(entity -> String.format("- %s (%s): %s", 
-                entity.getName(), 
-                entity.getType(), 
+            .map(entity -> String.format("- %s (%s): %s",
+                entity.getName(),
+                entity.getType(),
                 entity.getDescription() != null ? entity.getDescription() : ""))
             .collect(Collectors.joining("\n"));
     }
 
-    private Mono<Void> saveQueryHistory(String question, String answer, List<DocumentChunk> contextChunks, 
+    private Mono<Void> saveQueryHistory(String question, String answer, List<DocumentChunk> contextChunks,
                                        long responseTime, String sessionId) {
         return Mono.fromCallable(() -> {
             try {
@@ -213,12 +213,12 @@ public class RAGQueryService {
                 history.setResponseTimeMs(responseTime);
                 history.setSessionId(sessionId);
                 history.setCreatedDate(Instant.now());
-                
+
                 List<Long> chunkIds = contextChunks.stream()
                     .map(DocumentChunk::getId)
                     .collect(Collectors.toList());
                 history.setContextChunks(objectMapper.writeValueAsString(chunkIds));
-                
+
                 return history;
             } catch (Exception e) {
                 log.error("Failed to create query history: {}", e.getMessage(), e);
@@ -248,7 +248,7 @@ public class RAGQueryService {
             if (partialQuery.length() < 2) {
                 return Collections.<String>emptyList();
             }
-            
+
             return entityRepository.findByNameContaining(partialQuery)
                 .take(5)
                 .map(entity -> "关于" + entity.getName() + "的信息")
@@ -260,7 +260,7 @@ public class RAGQueryService {
     public Flux<Entity> exploreRelatedEntities(String entityName) {
         return entityRepository.findByName(entityName)
             .next()
-            .flatMapMany(entity -> 
+            .flatMapMany(entity ->
                 entityRepository.findRelatedEntities(entity.getId())
                     .map(result -> (Entity) result[0])
             );
