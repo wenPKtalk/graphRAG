@@ -128,7 +128,7 @@ export const AuthenticationSlice = createSlice({
         loading: false,
         isAuthenticated: false,
         sessionHasBeenFetched: true,
-        showModalLogin: true,
+        showModalLogin: false,
         errorMessage: action.error.message,
       }))
       .addCase(getAccount.fulfilled, (state, action) => {

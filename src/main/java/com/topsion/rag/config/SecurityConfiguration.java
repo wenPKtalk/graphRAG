@@ -4,6 +4,9 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers.pathMatchers;
 
 import com.topsion.rag.security.AuthoritiesConstants;
+import com.topsion.rag.security.jwt.JWTAuthenticationConverter;
+import com.topsion.rag.security.jwt.JWTReactiveAuthenticationManager;
+import com.topsion.rag.security.jwt.TokenProvider;
 import com.topsion.rag.web.filter.SpaWebFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +14,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.security.web.server.header.ReferrerPolicyServerHttpHeadersWriter;
 import org.springframework.security.web.server.header.XFrameOptionsServerHttpHeadersWriter.Mode;
 import org.springframework.security.web.server.savedrequest.NoOpServerRequestCache;
@@ -23,9 +27,11 @@ import tech.jhipster.config.JHipsterProperties;
 public class SecurityConfiguration {
 
     private final JHipsterProperties jHipsterProperties;
+    private final TokenProvider tokenProvider;
 
-    public SecurityConfiguration(JHipsterProperties jHipsterProperties) {
+    public SecurityConfiguration(JHipsterProperties jHipsterProperties, TokenProvider tokenProvider) {
         this.jHipsterProperties = jHipsterProperties;
+        this.tokenProvider = tokenProvider;
     }
 
     @Bean
@@ -60,7 +66,7 @@ public class SecurityConfiguration {
                     .pathMatchers("/api/authenticate").permitAll()
                     .pathMatchers("/api/admin/**").hasAuthority(AuthoritiesConstants.ADMIN)
                     .pathMatchers("/api/**").authenticated()
-                    .pathMatchers("/v3/api-docs/**").hasAuthority(AuthoritiesConstants.ADMIN)
+                    .pathMatchers("/v3/api-docs/**").permitAll()
                     .pathMatchers("/management/health").permitAll()
                     .pathMatchers("/management/health/**").permitAll()
                     .pathMatchers("/management/info").permitAll()
@@ -68,7 +74,16 @@ public class SecurityConfiguration {
                     .pathMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
             )
             .httpBasic(basic -> basic.disable())
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()));
+            .addFilterAt(jwtAuthenticationWebFilter(), SecurityWebFiltersOrder.AUTHENTICATION);
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationWebFilter jwtAuthenticationWebFilter() {
+        AuthenticationWebFilter authenticationWebFilter = new AuthenticationWebFilter(
+            new JWTReactiveAuthenticationManager(tokenProvider)
+        );
+        authenticationWebFilter.setServerAuthenticationConverter(new JWTAuthenticationConverter());
+        return authenticationWebFilter;
     }
 }

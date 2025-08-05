@@ -74,7 +74,7 @@ eclipse {
 defaultTasks "bootRun"
 
 springBoot {
-    mainClass = "com.topsion.rag.YApp"
+    mainClass = "com.topsion.rag.GraphRagApp"
 }
 
 test {
@@ -152,11 +152,12 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-validation"
     implementation "org.springframework.boot:spring-boot-starter-webflux"
     testImplementation "org.springframework.boot:spring-boot-test"
-    implementation "org.springframework.cloud:spring-cloud-starter"
-    implementation "org.springframework.cloud:spring-cloud-starter-bootstrap"
-    implementation "org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j"
-    implementation "org.springframework.cloud:spring-cloud-starter-consul-config"
-    implementation "org.springframework.cloud:spring-cloud-starter-consul-discovery"
+    // Temporarily commented out Spring Cloud dependencies for standalone startup
+    // implementation "org.springframework.cloud:spring-cloud-starter"
+    // implementation "org.springframework.cloud:spring-cloud-starter-bootstrap"
+    // implementation "org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j"
+    // implementation "org.springframework.cloud:spring-cloud-starter-consul-config"
+    // implementation "org.springframework.cloud:spring-cloud-starter-consul-discovery"
     implementation "org.springframework.data:spring-data-commons"
     implementation "org.springframework.retry:spring-retry"
     testImplementation "org.springframework.security:spring-security-test"
@@ -165,6 +166,9 @@ dependencies {
     implementation libs.jhipster.framework
     implementation libs.neo4j.migrations.spring.boot.starter
     implementation libs.springdoc.openapi.starter.webflux.api
+    implementation "io.jsonwebtoken:jjwt-api:0.12.6"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:0.12.6"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:0.12.6"
     implementation "org.springframework.boot:spring-boot-starter-data-neo4j"
     implementation "com.playtika.reactivefeign:feign-reactor-cloud"
     implementation "com.playtika.reactivefeign:feign-reactor-spring-configuration"

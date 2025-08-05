@@ -2,6 +2,7 @@ package com.topsion.rag.service;
 
 import com.theokanning.openai.embedding.EmbeddingRequest;
 import com.theokanning.openai.service.OpenAiService;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.topsion.rag.config.ApplicationProperties;
 import com.topsion.rag.domain.Document;
 import com.topsion.rag.domain.DocumentChunk;
@@ -55,7 +56,7 @@ public class DocumentProcessingService {
         DocumentRepository documentRepository,
         DocumentChunkRepository documentChunkRepository,
         EntityRepository entityRepository,
-        OpenAiService openAiService,
+        @Autowired(required = false) OpenAiService openAiService,
         ApplicationProperties applicationProperties,
         EntityExtractionService entityExtractionService
     ) {
@@ -255,6 +256,11 @@ public class DocumentProcessingService {
     private Mono<DocumentChunk> generateChunkEmbedding(DocumentChunk chunk) {
         return Mono.fromCallable(() -> {
             try {
+                if (openAiService == null) {
+                    log.warn("OpenAI service is not configured, skipping embedding generation for chunk");
+                    return chunk;
+                }
+
                 String model = applicationProperties.getOpenai().getModel().getEmbedding();
                 EmbeddingRequest request = EmbeddingRequest.builder()
                     .model(model)

@@ -1,10 +1,10 @@
 # This configuration is intended for development purpose, it's **your** responsibility to harden it for production
-name: y
+name: graphrag
 services:
   neo4j:
     image: neo4j:5.26.5
     # volumes:
-    #   - ~/volumes/jhipster/y/neo4j/:/data
+    #   - ~/volumes/jhipster/graphrag/neo4j/:/data
     environment:
       - NEO4J_AUTH=none
     # If you want to expose these ports outside your dev PC,

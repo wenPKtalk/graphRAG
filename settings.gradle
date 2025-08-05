@@ -9,4 +9,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "y"
+rootProject.name = "graphRag"

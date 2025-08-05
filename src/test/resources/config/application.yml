@@ -18,11 +18,11 @@ org:
     migrations:
       locations-to-scan:
       packages-to-scan: com.topsion.rag.config.neo4j
-      installed-by: y
+      installed-by: graphRag
 
 spring:
   application:
-    name: y
+    name: graphRag
   cloud:
     consul:
       discovery:
@@ -48,13 +48,13 @@ spring:
           authorities-claim-name: auth
   task:
     execution:
-      thread-name-prefix: y-task-
+      thread-name-prefix: graphRag-task-
       pool:
         core-size: 1
         max-size: 50
         queue-capacity: 10000
     scheduling:
-      thread-name-prefix: y-scheduling-
+      thread-name-prefix: graphRag-scheduling-
       pool:
         size: 20
   thymeleaf:
@@ -73,7 +73,7 @@ jhipster:
   clientApp:
     name: 'yApp'
   mail:
-    from: y@localhost.com
+    from: graphRag@localhost.com
     base-url: http://127.0.0.1:8080
   logging:
     # To test json console appender

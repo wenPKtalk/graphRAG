@@ -34,7 +34,7 @@ org:
     migrations:
       locations-to-scan:
       packages-to-scan: com.topsion.rag.config.neo4j
-      installed-by: y
+      installed-by: graphRag
 spring:
   devtools:
     restart:

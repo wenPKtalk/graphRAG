@@ -20,18 +20,18 @@ import tech.jhipster.config.JHipsterConstants;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ ApplicationProperties.class })
-public class YApp {
+public class GraphRagApp {
 
-    private static final Logger LOG = LoggerFactory.getLogger(YApp.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GraphRagApp.class);
 
     private final Environment env;
 
-    public YApp(Environment env) {
+    public GraphRagApp(Environment env) {
         this.env = env;
     }
 
     /**
-     * Initializes y.
+     * Initializes graphRag.
      * <p>
      * Spring profiles can be configured with a program argument --spring.profiles.active=your-active-profile
      * <p>
@@ -64,7 +64,7 @@ public class YApp {
      * @param args the command line arguments.
      */
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(YApp.class);
+        SpringApplication app = new SpringApplication(GraphRagApp.class);
         DefaultProfileUtil.addDefaultProfile(app);
         Environment env = app.run(args).getEnvironment();
         logApplicationStartup(env);

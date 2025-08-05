@@ -1,8 +1,8 @@
 {
-  "name": "y",
+  "name": "graphRag",
   "version": "0.0.1-SNAPSHOT",
   "private": true,
-  "description": "Description for Y",
+  "description": "Description for GraphRag",
   "license": "UNLICENSED",
   "scripts": {
     "app:start": "./gradlew",
@@ -25,7 +25,7 @@
     "ci:e2e:teardown": "npm run ci:e2e:teardown:docker --if-present",
     "ci:e2e:teardown:docker": "docker compose -f src/main/docker/services.yml down -v && docker ps -a",
     "ci:frontend:test": "npm run webapp:build:$npm_package_config_default_environment && npm run test-ci",
-    "ci:server:await": "echo \"Waiting for server at port $npm_package_config_backend_port to start\" && wait-on -t 180000 http-get://127.0.0.1:8080/services/y/management/health/readiness && echo \"Server at port $npm_package_config_backend_port started\"",
+    "ci:server:await": "echo \"Waiting for server at port $npm_package_config_backend_port to start\" && wait-on -t 180000 http-get://127.0.0.1:8080/services/graphRag/management/health/readiness && echo \"Server at port $npm_package_config_backend_port started\"",
     "clean-www": "rimraf build/resources/main/static/",
     "cleanup": "rimraf build/",
     "docker:consul:down": "docker compose -f src/main/docker/consul.yml down -v",
