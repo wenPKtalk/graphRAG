@@ -18,6 +18,7 @@ public class ApplicationProperties {
 
     public static class OpenAI {
         private String apiKey;
+        private String apiUrl = "https://api.openai.com";
         private Integer timeout = 60;
         private final Model model = new Model();
         private final Rag rag = new Rag();
@@ -28,6 +29,14 @@ public class ApplicationProperties {
 
         public void setApiKey(String apiKey) {
             this.apiKey = apiKey;
+        }
+
+        public String getApiUrl() {
+            return apiUrl;
+        }
+
+        public void setApiUrl(String apiUrl) {
+            this.apiUrl = apiUrl;
         }
 
         public Integer getTimeout() {

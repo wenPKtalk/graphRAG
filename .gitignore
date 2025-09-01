@@ -132,6 +132,12 @@ Desktop.ini
 .merge_file*
 
 ######################
+# Environment Variables
+######################
+.env
+.env.local
+
+######################
 # Gradle Wrapper
 ######################
 !gradle/wrapper/gradle-wrapper.jar
